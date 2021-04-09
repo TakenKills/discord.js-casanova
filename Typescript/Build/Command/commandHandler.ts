@@ -55,10 +55,14 @@ export class CommandHandler extends EventEmitter {
 
     this.commands = new Collection<string, Command>();
 
-    for (const path of fileSync(resolve(this.commandDirectory)))
-      this.loadCommand(path);
+    const paths = fileSync(resolve(this.commandDirectory));
 
-    this.client.on("message", (message: Message) => this.handle(message));
+    for (const path of paths) this.loadCommand(path);
+
+    this.client.on(
+      "message",
+      (message: Message): Promise<void> => this.handle(message)
+    );
   }
 
   loadCommand(path: string): void {
@@ -83,17 +87,27 @@ export class CommandHandler extends EventEmitter {
       throwErr(
         `CommandHandler - reloadCommand - There was no command by that name`
       );
-    // @ts-ignore
-    delete require.cache[require.resolve(command?.filePath)];
 
-    this.commands.delete(name);
-    // @ts-ignore
-    this.loadCommand(command?.filePath);
+    try {
+      // @ts-ignore
+      delete require.cache[require.resolve(command?.filePath)];
+
+      this.commands.delete(name);
+      // @ts-ignore
+      this.loadCommand(command?.filePath);
+    } catch (e) {
+      throw e;
+    }
   }
 
-  handle(message: Message): void {
-    console.log("hi");
-    const prefix = this.prefix;
+  async handle(message: Message): Promise<void> {
+    let prefix: string | string[] | Function = this.prefix;
+
+    // @ts-ignore
+    if (prefix instanceof Function) prefix = await this.prefix(message);
+
+    // @ts-ignore
+    if (!message.content.startsWith(prefix)) return;
 
     const [commandName, ...args] = message.content
       .slice(prefix.length)
@@ -103,9 +117,19 @@ export class CommandHandler extends EventEmitter {
     // @ts-ignore
     const command = this.commands.get(commandName?.toLowerCase());
     try {
-      command?.execute(message, args);
+      return command?.execute(message, args);
     } catch (e) {
       throw e;
     }
   }
 }
+
+// else if (prefix instanceof Array) {
+//   //@ts-ignore
+//   prefix = prefix.find((str: string) => {
+//     if (/^(.)\1/g.test(str)) return str.match(/^(.)\1/g);
+//     else return message.content.startsWith(str);
+//   });
+
+//   console.log(prefix);
+// }
