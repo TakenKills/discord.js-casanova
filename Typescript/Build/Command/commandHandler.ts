@@ -5,7 +5,9 @@ import { Command } from "../interface/command";
 import rread from "readdir-recursive";
 import { resolve } from "path";
 import { CasanovaClient, throwErr } from "../Client/client";
-import { Collection, Message } from "discord.js";
+import { Collection, Message, Snowflake } from "discord.js";
+import { Events } from "../interface/commandHandler";
+const { commandHandler: EVENTS } = Events;
 const { fileSync } = new rread();
 
 export class CommandHandler extends EventEmitter {
@@ -13,6 +15,8 @@ export class CommandHandler extends EventEmitter {
   prefix: string | string[] | Function;
   client: CasanovaClient;
   commands: Collection<string, Command>;
+  cooldowns: Collection<string, Collection<Snowflake, number>>;
+  defaultCooldown?: number;
 
   constructor(
     client: CasanovaClient,
@@ -24,23 +28,23 @@ export class CommandHandler extends EventEmitter {
 
     if (!client || !(client instanceof CasanovaClient))
       throwErr(
-        `The client passed into the commandHandler is not an instanceof CasanovaClient.`,
+        `CommandHandler - The client passed into the commandHandler is not an instanceof CasanovaClient.`,
         "syntax"
       );
 
     if (!this.client.commandHandler)
       throwErr(
-        "The commandHandler option on the Casanova Client is not enabled.",
+        "CommandHandler - The commandHandler option on the Casanova Client is not enabled.",
         "range"
       );
 
-    const { commandDirectory, prefix } = CommandHandlerOptions;
+    const { commandDirectory, prefix, defaultCooldown } = CommandHandlerOptions;
 
     this.commandDirectory = commandDirectory;
 
     if (!this.commandDirectory || typeof this.commandDirectory !== "string")
       throwErr(
-        `There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`
+        `CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`
       );
 
     this.prefix = prefix;
@@ -50,10 +54,21 @@ export class CommandHandler extends EventEmitter {
       !Array.isArray(typeof this.prefix)
     )
       throwErr(
-        `The prefix provided to the commandHandler is not a typeof string, function or array.`
+        `CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`
       );
 
-    this.commands = new Collection<string, Command>();
+    this.defaultCooldown = defaultCooldown;
+
+    if (!this.defaultCooldown) this.defaultCooldown = 3;
+
+    if (typeof this.defaultCooldown !== "number")
+      throwErr(
+        `CommandHandler - The defaultCooldown option on the command handler is not a number.`
+      );
+
+    this.commands = new Collection();
+
+    this.cooldowns = new Collection();
 
     const paths = fileSync(resolve(this.commandDirectory));
 
@@ -61,7 +76,7 @@ export class CommandHandler extends EventEmitter {
 
     this.client.on(
       "message",
-      (message: Message): Promise<void> => this.handle(message)
+      (message: Message): Promise<void | boolean> => this.handle(message)
     );
   }
 
@@ -71,7 +86,7 @@ export class CommandHandler extends EventEmitter {
 
     if (!command.execute || typeof command.execute !== "function")
       throwErr(
-        `There was no execute function on the command "${command.name}"`
+        `CommandHandler - loadCommand - There was no execute function on the command "${command.name}"`
       );
 
     command.filePath = path;
@@ -100,7 +115,7 @@ export class CommandHandler extends EventEmitter {
     }
   }
 
-  async handle(message: Message): Promise<void> {
+  async handle(message: Message): Promise<void | boolean> {
     let prefix: string | string[] | Function = this.prefix;
 
     // @ts-ignore
@@ -116,6 +131,30 @@ export class CommandHandler extends EventEmitter {
 
     // @ts-ignore
     const command = this.commands.get(commandName?.toLowerCase());
+
+    //! cooldown system doesn't work and i'm sleep deprived i'll fix later
+    // @ts-ignore
+    if (!this.cooldowns.has(command.name))
+      // @ts-ignore
+      this.cooldowns.set(command.name, new Collection());
+
+    const now = Date.now();
+    // @ts-ignore
+    const timestamps = this.cooldowns.get(command.name);
+    // @ts-ignore
+    const cooldownAmount = (command?.cooldown || this.defaultCooldown) * 1000;
+
+    // @ts-ignore
+    if (timestamps.has(message.author.id)) {
+      // @ts-ignore
+      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+
+      if (now < expirationTime) {
+        const timeLeft = expirationTime - now;
+        return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
+      }
+    }
+
     try {
       return command?.execute(message, args);
     } catch (e) {
@@ -123,13 +162,3 @@ export class CommandHandler extends EventEmitter {
     }
   }
 }
-
-// else if (prefix instanceof Array) {
-//   //@ts-ignore
-//   prefix = prefix.find((str: string) => {
-//     if (/^(.)\1/g.test(str)) return str.match(/^(.)\1/g);
-//     else return message.content.startsWith(str);
-//   });
-
-//   console.log(prefix);
-// }
