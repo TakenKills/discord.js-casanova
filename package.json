@@ -9,7 +9,7 @@
   "author": "TakenKills",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.5.3",
+    "discord.js": "github:discordjs/discord.js",
     "readdir-recursive": "0.0.4"
   },
   "devDependencies": {

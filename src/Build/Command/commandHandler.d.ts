@@ -12,5 +12,5 @@ export declare class CommandHandler extends EventEmitter {
     constructor(client: CasanovaClient, CommandHandlerOptions: commandHandlerOptions);
     loadCommand(path: string): void;
     reloadCommand(name: string): void;
-    handle(message: Message): void;
+    handle(message: Message): Promise<void>;
 }
