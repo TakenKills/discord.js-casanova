@@ -1,10 +1,14 @@
 import { commandOptions } from "../interface/command";
-import { throwErr } from "../Client/client";
-
+import { CasanovaClient, throwErr } from "../Client/client";
 export class CommandBase {
   name: string;
+  // @ts-ignore
+  client: CasanovaClient;
+  // @ts-ignore
+  filepath: string;
+
   constructor(commandOptions: commandOptions) {
-    const { name } = commandOptions;
+    const { name  } = commandOptions;
 
     this.name = name;
     if (!this.name || typeof this.name !== "string")
