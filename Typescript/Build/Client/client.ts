@@ -1,38 +1,27 @@
 import { ClientOptions, Client } from "discord.js";
-import { CasanovaOptions } from "../interface/Client";
+import { CasanovaOptions, CasanovaError } from "../interface/Client";
 
 export class CasanovaClient extends Client {
   token: string;
-  commandHandler: boolean;
-  eventHandler: boolean;
+  handlers: Array<"command" | "event">;
 
   constructor(
     CasanovaOptions: CasanovaOptions,
     DiscordJSOptions: ClientOptions
   ) {
-    const { token, commandHandler, eventHandler } = CasanovaOptions;
+    const { token, handlers } = CasanovaOptions;
     super(DiscordJSOptions);
 
     this.token = token;
 
     if (!this.token || typeof this.token !== "string")
       throwErr(
-        "There was either no token provided or the typeof token was not a string."
+        "CasanovaClient: There was either no token provided or the token provided was not a typeof string.",
+        "range"
       );
 
-    this.commandHandler = commandHandler;
-
-    if (!this.commandHandler || typeof this.commandHandler !== "boolean")
-      throwErr(
-        "There was either no commandHandler property provided in the super call of the casanova client or it was not a typeof boolean."
-      );
-
-    this.eventHandler = eventHandler;
-
-    if (!this.eventHandler || typeof this.eventHandler !== "boolean")
-      throwErr(
-        "There was either no eventHandler property provided in the super call of the casanova client or it was not a typeof boolean."
-      );
+    this.handlers = handlers;
+    if (!Array.isArray(this.handlers)) throwErr(`The "handlers" option on the client is not an array.`);
   }
 
   build(): Promise<void> {
@@ -43,8 +32,8 @@ export class CasanovaClient extends Client {
   }
 }
 
-export const throwErr = (error: string, type?: string) => {
-  if (!type) throw new Error(`Casanova Error - ${error}`);
+export const throwErr = (error: string, type?: "range" | "syntax" | "type") => {
+  if (!type) throw new CasanovaError(`${error}`);
   else {
     if (type === "syntax") throw new SyntaxError(`Casanova Error - ${error}`);
     else if (type === "range")
