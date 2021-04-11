@@ -17,28 +17,32 @@ export class CommandBase {
     this.name = name;
     if (!this.name || typeof this.name !== "string")
       throwErr(
-        `There was no name property provided in the super call of a command or the name provided was not a typeof string.`
+        `There was no name property provided in the super call of a command or the name provided was not a typeof string.`,
+        "range"
       );
 
     this.usage = usage;
 
     if (!Check("string", this.usage) && this.usage)
       throwErr(
-        `The usage on the command "${this.name}" is not a typeof string.`
+        `The usage on the command "${this.name}" is not a typeof string.`,
+        "type"
       );
 
     this.description = description;
 
     if (!Check("string", this.description) && this.description)
       throwErr(
-        `The description on the command "${this.name}" is not a typeof string.`
+        `The description on the command "${this.name}" is not a typeof string.`,
+        "type"
       );
 
     this.category = category;
 
     if (!Check("string", this.category) && this.category)
       throwErr(
-        `The category on the command "${this.name}" is not a typeof string.`
+        `The category on the command "${this.name}" is not a typeof string.`,
+        "type"
       );
 
     this.cooldown = cooldown;
