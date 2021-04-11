@@ -18,6 +18,7 @@ export class CommandHandler extends EventEmitter {
   commands: Collection<string, Command>;
   cooldowns: Collection<string, Collection<Snowflake, number>>;
   defaultCooldown?: number;
+  ignoreCooldown?: Array<Snowflake> | Snowflake;
 
   constructor(
     client: CasanovaClient,
@@ -33,19 +34,25 @@ export class CommandHandler extends EventEmitter {
         "syntax"
       );
 
-    if (!this.client.commandHandler)
+    if (!this.client.handlers.includes("command"))
       throwErr(
-        "CommandHandler - The commandHandler option on the Casanova Client is not enabled.",
+        'CommandHandler - "command" handler is not enabled via the client.',
         "range"
       );
 
-    const { commandDirectory, prefix, defaultCooldown } = CommandHandlerOptions;
+    const {
+      commandDirectory,
+      prefix,
+      defaultCooldown,
+      ignoreCooldown,
+    } = CommandHandlerOptions;
 
     this.commandDirectory = commandDirectory;
 
     if (!this.commandDirectory || typeof this.commandDirectory !== "string")
       throwErr(
-        `CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`
+        `CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`,
+        "range"
       );
 
     this.prefix = prefix;
@@ -55,7 +62,8 @@ export class CommandHandler extends EventEmitter {
       !Array.isArray(typeof this.prefix)
     )
       throwErr(
-        `CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`
+        `CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`,
+        "type"
       );
 
     this.defaultCooldown = defaultCooldown;
@@ -67,7 +75,11 @@ export class CommandHandler extends EventEmitter {
         `CommandHandler - The defaultCooldown option on the command handler is not a number.`
       );
 
-    this.commands = new Collection();
+    this.ignoreCooldown = ignoreCooldown;
+
+    if (this.ignoreCooldown && typeof this.ignoreCooldown !== "string" && !Array.isArray(this.ignoreCooldown))
+    throwErr(`CommandHandler - `)
+      this.commands = new Collection();
 
     this.cooldowns = new Collection();
 
