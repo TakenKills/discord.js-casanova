@@ -1,5 +1,8 @@
 export interface CasanovaOptions {
-    eventHandler: boolean;
-    commandHandler: boolean;
     token: string;
+    handlers: Array<"command" | "event">;
+}
+export declare class CasanovaError extends Error {
+    date: Date;
+    constructor(message: string);
 }

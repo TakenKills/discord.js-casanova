@@ -19,6 +19,7 @@ const path_1 = require("path");
 const client_1 = require("../Client/client");
 const discord_js_1 = require("discord.js");
 const commandHandler_1 = require("../interface/commandHandler");
+const command_1 = require("./command");
 const { commandHandler: EVENTS } = commandHandler_1.Events;
 const { fileSync } = new readdir_recursive_1.default();
 class CommandHandler extends events_1.EventEmitter {
@@ -27,22 +28,25 @@ class CommandHandler extends events_1.EventEmitter {
         this.client = client;
         if (!client || !(client instanceof client_1.CasanovaClient))
             client_1.throwErr(`CommandHandler - The client passed into the commandHandler is not an instanceof CasanovaClient.`, "syntax");
-        if (!this.client.commandHandler)
-            client_1.throwErr("CommandHandler - The commandHandler option on the Casanova Client is not enabled.", "range");
-        const { commandDirectory, prefix, defaultCooldown } = CommandHandlerOptions;
+        if (!this.client.handlers.includes("command"))
+            client_1.throwErr('CommandHandler - "command" handler is not enabled via the client.', "range");
+        const { commandDirectory, prefix, defaultCooldown, ignoreCooldown, } = CommandHandlerOptions;
         this.commandDirectory = commandDirectory;
         if (!this.commandDirectory || typeof this.commandDirectory !== "string")
-            client_1.throwErr(`CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`);
+            client_1.throwErr(`CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`, "range");
         this.prefix = prefix;
         if (!this.prefix &&
             !["string", "function"].includes(typeof this.prefix) &&
             !Array.isArray(typeof this.prefix))
-            client_1.throwErr(`CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`);
+            client_1.throwErr(`CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`, "type");
         this.defaultCooldown = defaultCooldown;
         if (!this.defaultCooldown)
             this.defaultCooldown = 3;
         if (typeof this.defaultCooldown !== "number")
             client_1.throwErr(`CommandHandler - The defaultCooldown option on the command handler is not a number.`);
+        this.ignoreCooldown = ignoreCooldown;
+        if (this.ignoreCooldown && typeof this.ignoreCooldown !== "string" && !Array.isArray(this.ignoreCooldown))
+            client_1.throwErr(`CommandHandler - `);
         this.commands = new discord_js_1.Collection();
         this.cooldowns = new discord_js_1.Collection();
         const paths = fileSync(path_1.resolve(this.commandDirectory));
@@ -53,6 +57,8 @@ class CommandHandler extends events_1.EventEmitter {
     loadCommand(path) {
         const File = require(path);
         const command = new File(this.client);
+        if (this.commands.has(command))
+            client_1.throwErr(`CommandHandler - loadCommand - The command ${command.name} has already been loaded.`);
         if (!command.execute || typeof command.execute !== "function")
             client_1.throwErr(`CommandHandler - loadCommand - There was no execute function on the command "${command.name}"`);
         command.filePath = path;
@@ -83,24 +89,29 @@ class CommandHandler extends events_1.EventEmitter {
                 .slice(prefix.length)
                 .trim()
                 .split(/ +/g);
-            const command = this.commands.get(commandName === null || commandName === void 0 ? void 0 : commandName.toLowerCase());
-            if (!this.cooldowns.has(command.name))
+            const command = this.commands.get(commandName.toLowerCase());
+            if (!command || !(command instanceof command_1.CommandBase))
+                return;
+            if (!this.cooldowns.has(command.name)) {
                 this.cooldowns.set(command.name, new discord_js_1.Collection());
+            }
             const now = Date.now();
             const timestamps = this.cooldowns.get(command.name);
-            const cooldownAmount = ((command === null || command === void 0 ? void 0 : command.cooldown) || this.defaultCooldown) * 1000;
-            if (timestamps.has(message.author.id)) {
+            const cooldownAmount = (command.cooldown || this.defaultCooldown) * 1000;
+            if (timestamps === null || timestamps === void 0 ? void 0 : timestamps.has(message.author.id)) {
                 const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
                 if (now < expirationTime) {
                     const timeLeft = expirationTime - now;
                     return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
                 }
             }
+            timestamps === null || timestamps === void 0 ? void 0 : timestamps.set(message.author.id, now);
+            setTimeout(() => timestamps === null || timestamps === void 0 ? void 0 : timestamps.delete(message.author.id), cooldownAmount);
             try {
                 return command === null || command === void 0 ? void 0 : command.execute(message, args);
             }
             catch (e) {
-                throw e;
+                console.error(e);
             }
         });
     }

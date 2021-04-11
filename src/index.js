@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventBase = exports.CommandHandler = exports.CommandBase = exports.CasanovaClient = void 0;
+exports.EventHandler = exports.EventBase = exports.CommandHandler = exports.CommandBase = exports.CasanovaClient = void 0;
 const client_1 = require("./Build/Client/client");
 Object.defineProperty(exports, "CasanovaClient", { enumerable: true, get: function () { return client_1.CasanovaClient; } });
 const command_1 = require("./Build/Command/command");
@@ -9,3 +9,5 @@ const commandHandler_1 = require("./Build/Command/commandHandler");
 Object.defineProperty(exports, "CommandHandler", { enumerable: true, get: function () { return commandHandler_1.CommandHandler; } });
 const Event_1 = require("./Build/Event/Event");
 Object.defineProperty(exports, "EventBase", { enumerable: true, get: function () { return Event_1.EventBase; } });
+const eventHandler_1 = require("./Build/Event/eventHandler");
+Object.defineProperty(exports, "EventHandler", { enumerable: true, get: function () { return eventHandler_1.eventHandler; } });

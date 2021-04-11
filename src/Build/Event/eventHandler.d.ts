@@ -8,4 +8,5 @@ export declare class eventHandler {
     events: Collection<string, Event>;
     constructor(client: CasanovaClient, eventHandlerOptions: eventHandlerOptions);
     loadEvent(path: string): void;
+    handleEvent(eventName: string): void;
 }

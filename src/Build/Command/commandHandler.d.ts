@@ -11,6 +11,7 @@ export declare class CommandHandler extends EventEmitter {
     commands: Collection<string, Command>;
     cooldowns: Collection<string, Collection<Snowflake, number>>;
     defaultCooldown?: number;
+    ignoreCooldown?: Array<Snowflake> | Snowflake;
     constructor(client: CasanovaClient, CommandHandlerOptions: commandHandlerOptions);
     loadCommand(path: string): void;
     reloadCommand(name: string): void;
