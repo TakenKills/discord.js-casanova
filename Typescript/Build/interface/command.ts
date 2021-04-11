@@ -17,5 +17,5 @@ export interface Command {
   description?: string;
   category?: string;
   cooldown?: number;
-  execute(message: Message, args: string[]): void;
+  execute(message: Message, args: string[]): any;
 }

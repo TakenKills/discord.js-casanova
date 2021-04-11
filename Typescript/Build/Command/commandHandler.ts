@@ -7,6 +7,7 @@ import { resolve } from "path";
 import { CasanovaClient, throwErr } from "../Client/client";
 import { Collection, Message, Snowflake } from "discord.js";
 import { Events } from "../interface/commandHandler";
+import { CommandBase } from "./command";
 const { commandHandler: EVENTS } = Events;
 const { fileSync } = new rread();
 
@@ -74,15 +75,17 @@ export class CommandHandler extends EventEmitter {
 
     for (const path of paths) this.loadCommand(path);
 
-    this.client.on(
-      "message",
-      (message: Message): Promise<void | boolean> => this.handle(message)
-    );
+    this.client.on("message", (message: Message) => this.handle(message));
   }
 
   loadCommand(path: string): void {
     const File = require(path);
     const command = new File(this.client);
+
+    if (this.commands.has(command))
+      throwErr(
+        `CommandHandler - loadCommand - The command ${command.name} has already been loaded.`
+      );
 
     if (!command.execute || typeof command.execute !== "function")
       throwErr(
@@ -130,22 +133,19 @@ export class CommandHandler extends EventEmitter {
       .split(/ +/g);
 
     // @ts-ignore
-    const command = this.commands.get(commandName?.toLowerCase());
+    const command = this.commands.get(commandName.toLowerCase());
+    if (!command || !(command instanceof CommandBase)) return;
 
-    //! cooldown system doesn't work and i'm sleep deprived i'll fix later
-    // @ts-ignore
-    if (!this.cooldowns.has(command.name))
-      // @ts-ignore
+    if (!this.cooldowns.has(command.name)) {
       this.cooldowns.set(command.name, new Collection());
+    }
 
     const now = Date.now();
-    // @ts-ignore
     const timestamps = this.cooldowns.get(command.name);
     // @ts-ignore
-    const cooldownAmount = (command?.cooldown || this.defaultCooldown) * 1000;
+    const cooldownAmount = (command.cooldown || this.defaultCooldown) * 1000;
 
-    // @ts-ignore
-    if (timestamps.has(message.author.id)) {
+    if (timestamps?.has(message.author.id)) {
       // @ts-ignore
       const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
@@ -154,11 +154,12 @@ export class CommandHandler extends EventEmitter {
         return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
       }
     }
-
+    timestamps?.set(message.author.id, now);
+    setTimeout(() => timestamps?.delete(message.author.id), cooldownAmount);
     try {
       return command?.execute(message, args);
     } catch (e) {
-      throw e;
+      console.error(e);
     }
   }
 }

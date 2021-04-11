@@ -18,25 +18,33 @@ const readdir_recursive_1 = __importDefault(require("readdir-recursive"));
 const path_1 = require("path");
 const client_1 = require("../Client/client");
 const discord_js_1 = require("discord.js");
+const commandHandler_1 = require("../interface/commandHandler");
+const { commandHandler: EVENTS } = commandHandler_1.Events;
 const { fileSync } = new readdir_recursive_1.default();
 class CommandHandler extends events_1.EventEmitter {
     constructor(client, CommandHandlerOptions) {
         super();
         this.client = client;
         if (!client || !(client instanceof client_1.CasanovaClient))
-            client_1.throwErr(`The client passed into the commandHandler is not an instanceof CasanovaClient.`, "syntax");
+            client_1.throwErr(`CommandHandler - The client passed into the commandHandler is not an instanceof CasanovaClient.`, "syntax");
         if (!this.client.commandHandler)
-            client_1.throwErr("The commandHandler option on the Casanova Client is not enabled.", "range");
-        const { commandDirectory, prefix } = CommandHandlerOptions;
+            client_1.throwErr("CommandHandler - The commandHandler option on the Casanova Client is not enabled.", "range");
+        const { commandDirectory, prefix, defaultCooldown } = CommandHandlerOptions;
         this.commandDirectory = commandDirectory;
         if (!this.commandDirectory || typeof this.commandDirectory !== "string")
-            client_1.throwErr(`There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`);
+            client_1.throwErr(`CommandHandler - There was no commandDirecotry provided to the commandHandler or it was not a typeof string.`);
         this.prefix = prefix;
         if (!this.prefix &&
             !["string", "function"].includes(typeof this.prefix) &&
             !Array.isArray(typeof this.prefix))
-            client_1.throwErr(`The prefix provided to the commandHandler is not a typeof string, function or array.`);
+            client_1.throwErr(`CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`);
+        this.defaultCooldown = defaultCooldown;
+        if (!this.defaultCooldown)
+            this.defaultCooldown = 3;
+        if (typeof this.defaultCooldown !== "number")
+            client_1.throwErr(`CommandHandler - The defaultCooldown option on the command handler is not a number.`);
         this.commands = new discord_js_1.Collection();
+        this.cooldowns = new discord_js_1.Collection();
         const paths = fileSync(path_1.resolve(this.commandDirectory));
         for (const path of paths)
             this.loadCommand(path);
@@ -46,7 +54,7 @@ class CommandHandler extends events_1.EventEmitter {
         const File = require(path);
         const command = new File(this.client);
         if (!command.execute || typeof command.execute !== "function")
-            client_1.throwErr(`There was no execute function on the command "${command.name}"`);
+            client_1.throwErr(`CommandHandler - loadCommand - There was no execute function on the command "${command.name}"`);
         command.filePath = path;
         command.client = this.client;
         this.commands.set(command.name, command);
@@ -76,6 +84,18 @@ class CommandHandler extends events_1.EventEmitter {
                 .trim()
                 .split(/ +/g);
             const command = this.commands.get(commandName === null || commandName === void 0 ? void 0 : commandName.toLowerCase());
+            if (!this.cooldowns.has(command.name))
+                this.cooldowns.set(command.name, new discord_js_1.Collection());
+            const now = Date.now();
+            const timestamps = this.cooldowns.get(command.name);
+            const cooldownAmount = ((command === null || command === void 0 ? void 0 : command.cooldown) || this.defaultCooldown) * 1000;
+            if (timestamps.has(message.author.id)) {
+                const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+                if (now < expirationTime) {
+                    const timeLeft = expirationTime - now;
+                    return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
+                }
+            }
             try {
                 return command === null || command === void 0 ? void 0 : command.execute(message, args);
             }
