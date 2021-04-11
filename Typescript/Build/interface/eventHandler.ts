@@ -1,3 +1,3 @@
 export interface eventHandlerOptions {
-    eventDirectory: string;
+  eventDirectory: string;
 }
