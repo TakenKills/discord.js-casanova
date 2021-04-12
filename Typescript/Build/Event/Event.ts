@@ -1,14 +1,17 @@
 import { eventOptions } from "../interface/event";
-import { throwErr } from "../Client/client";
+import { CasanovaClient, throwErr } from "../Client/client";
 import { events as validEvents } from "../constants";
 
 export class EventBase {
   name: string;
-  emittedFrom?: "commandhandler" | "client";
   once?: boolean;
+  //@ts-ignore
+  client: CasanovaClient;
+  // @ts-ignore
+  path: string;
 
   constructor(eventOptions: eventOptions) {
-    const { name, emittedFrom, once } = eventOptions;
+    const { name, once } = eventOptions;
 
     this.name = name;
     if (!this.name || typeof this.name !== "string")
@@ -17,10 +20,7 @@ export class EventBase {
       );
 
     if (!validEvents.includes(this.name))
-      throwErr(`The event "${this.name}" is an invalid event.`);
-
-    this.emittedFrom = emittedFrom;
-    if (!this.emittedFrom) this.emittedFrom = "client";
+      throwErr(`EventHandler: The event "${this.name}" is an invalid event.`);
 
     this.once = once;
     if (!this.once) this.once = false;
