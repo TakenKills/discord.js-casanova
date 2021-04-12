@@ -6,6 +6,7 @@ import { CasanovaClient, throwErr } from "../Client/client";
 import { Collection } from "discord.js";
 import { Event } from "../interface/event";
 import { CommandHandler } from "../Command/commandHandler";
+import { validCommandHandlerEvents } from "../constants";
 const { fileSync } = new rread();
 
 export class eventHandler {
@@ -49,12 +50,17 @@ export class eventHandler {
 
     const event = new File(this.client);
 
+    if (this.events.has(event?.name))
+      throwErr(`The event "${event?.name}" has already been loaded.`);
+
     if (!event.execute || typeof event.execute !== "function")
       throwErr(
         `EventHandler: There was no execute function on the event "${event.name}".`
       );
 
     event.client = this.client;
+    event.path = path;
+
     this.events?.set(event.name, event);
   }
 
@@ -68,17 +74,10 @@ export class eventHandler {
     if (!event?.execute || typeof event.execute !== "function")
       throwErr(`There was no "execute" function on the event ${eventName}`);
 
-    let emitter: "client" | "commandhandler";
-    //TODO! make emittedFrom option go boom boom
-    //@ts-ignore
-    emitter = event?.emittedFrom;
-
+    let emitter: string = "client";
     // @ts-ignore
-    if (!["client", "commandhandler"].includes(emitter?.toLowerCase()))
-      throwErr(
-        `EventHandler: On the event "${event?.name}" the "emittedFrom" option is not set to "client" nor "commandhandler".`
-      );
-
+    if (validCommandHandlerEvents.includes(event?.name))
+      emitter = "commandhandler";
     const type = event?.once ? "once" : "on";
 
     if (emitter?.toLowerCase() === "commandhandler") {
@@ -105,5 +104,23 @@ export class eventHandler {
     } catch (e) {
       console.error(e);
     }
+  }
+
+  reloadEvent(name: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const event = this.events.get(name);
+      if (!event) throwErr(`EventHandler - reloadEvent: That is not an event.`);
+      try {
+        //@ts-ignore
+        delete require.cache[require.resolve(event?.path)];
+
+        this.events.delete(name);
+        //@ts-ignore
+        this.loadEvent(event?.path);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 }
