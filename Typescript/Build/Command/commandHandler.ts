@@ -19,6 +19,7 @@ export class CommandHandler extends EventEmitter {
   cooldowns: Collection<string, Collection<Snowflake, number>>;
   defaultCooldown?: number;
   ignoreCooldown?: Array<Snowflake> | Snowflake;
+  aliases: Collection<string, string>;
 
   constructor(
     client: CasanovaClient,
@@ -72,16 +73,27 @@ export class CommandHandler extends EventEmitter {
 
     if (typeof this.defaultCooldown !== "number")
       throwErr(
-        `CommandHandler - The defaultCooldown option on the command handler is not a number.`
+        `CommandHandler - The defaultCooldown option on the command handler is not a number.`,
+        "type"
       );
 
     this.ignoreCooldown = ignoreCooldown;
 
-    if (this.ignoreCooldown && typeof this.ignoreCooldown !== "string" && !Array.isArray(this.ignoreCooldown))
-    throwErr(`CommandHandler - `)
-      this.commands = new Collection();
+    if (
+      this.ignoreCooldown &&
+      typeof this.ignoreCooldown !== "string" &&
+      !Array.isArray(this.ignoreCooldown)
+    )
+      throwErr(
+        `CommandHandler - The "ignoreCooldown" option on the command handler is not a string nor an array.`,
+        "type"
+      );
+
+    this.commands = new Collection();
 
     this.cooldowns = new Collection();
+
+    this.aliases = new Collection();
 
     const paths = fileSync(resolve(this.commandDirectory));
 
@@ -92,9 +104,9 @@ export class CommandHandler extends EventEmitter {
 
   loadCommand(path: string): void {
     const File = require(path);
-    const command = new File(this.client);
+    const command: Command = new File(this.client);
 
-    if (this.commands.has(command))
+    if (this.commands.has(command.name))
       throwErr(
         `CommandHandler - loadCommand - The command ${command.name} has already been loaded.`
       );
@@ -108,6 +120,7 @@ export class CommandHandler extends EventEmitter {
     command.client = this.client;
 
     this.commands.set(command.name, command);
+    for (const alias of command.aliases) this.aliases.set(alias, command.name);
   }
 
   reloadCommand(name: string): void {
@@ -126,7 +139,7 @@ export class CommandHandler extends EventEmitter {
       // @ts-ignore
       this.loadCommand(command?.filePath);
     } catch (e) {
-      throw e;
+      console.error(e);
     }
   }
 
@@ -139,18 +152,16 @@ export class CommandHandler extends EventEmitter {
     // @ts-ignore
     if (!message.content.startsWith(prefix)) return;
 
-    const [commandName, ...args] = message.content
-      .slice(prefix.length)
-      .trim()
-      .split(/ +/g);
+    const command =
+      // @ts-ignore
+      this.commands.get(commandName.toLowerCase()) ||
+      // @ts-ignore
+      this.commands.get(this.aliases.get(commandName?.toLowerCase()));
 
-    // @ts-ignore
-    const command = this.commands.get(commandName.toLowerCase());
     if (!command || !(command instanceof CommandBase)) return;
 
-    if (!this.cooldowns.has(command.name)) {
+    if (!this.cooldowns.has(command.name))
       this.cooldowns.set(command.name, new Collection());
-    }
 
     const now = Date.now();
     const timestamps = this.cooldowns.get(command.name);
@@ -168,6 +179,12 @@ export class CommandHandler extends EventEmitter {
     }
     timestamps?.set(message.author.id, now);
     setTimeout(() => timestamps?.delete(message.author.id), cooldownAmount);
+
+    const [commandName, ...args] = message.content
+      .slice(prefix.length)
+      .trim()
+      .split(/ +/g);
+
     try {
       return command?.execute(message, args);
     } catch (e) {

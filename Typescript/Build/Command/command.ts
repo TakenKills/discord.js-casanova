@@ -10,9 +10,10 @@ export class CommandBase {
   category?: string;
   util: Util;
   cooldown?: number;
+  aliases: string[];
 
   constructor(commandOptions: commandOptions) {
-    const { name, usage, description, category, cooldown } = commandOptions;
+    const { name, usage, description, category, cooldown, aliases } = commandOptions;
 
     this.name = name;
     if (!this.name || typeof this.name !== "string")
@@ -46,6 +47,16 @@ export class CommandBase {
       );
 
     this.cooldown = cooldown;
+
+        if (!Check("number", this.cooldown) && this.cooldown)
+        throwErr(`Command "${this.name}": on that command the "cooldown" option is not a number.`)
+
+    this.aliases = aliases;
+
+    if (!Array.isArray(this.aliases) && this.aliases)
+      throwErr(
+        `Command "${this.name}": The aliases on that command is not an array.`
+      );
 
     this.util = new Util();
   }

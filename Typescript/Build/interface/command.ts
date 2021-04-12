@@ -7,6 +7,7 @@ export interface commandOptions {
   description?: string;
   category?: string;
   cooldown?: number;
+  aliases: string[];
 }
 
 export interface Command {
@@ -17,5 +18,6 @@ export interface Command {
   description?: string;
   category?: string;
   cooldown?: number;
+  aliases: string[];
   execute(message: Message, args: string[]): any;
 }
