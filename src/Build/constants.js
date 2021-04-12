@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.events = void 0;
+exports.validCommandHandlerEvents = exports.events = void 0;
 exports.events = [
     "channelCreate",
     "channelDelete",
@@ -53,3 +53,4 @@ exports.events = [
     "webhookUpdate",
     "cooldown",
 ];
+exports.validCommandHandlerEvents = ["cooldown"];

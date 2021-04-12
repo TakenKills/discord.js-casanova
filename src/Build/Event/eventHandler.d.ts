@@ -9,4 +9,5 @@ export declare class eventHandler {
     constructor(client: CasanovaClient, eventHandlerOptions: eventHandlerOptions);
     loadEvent(path: string): void;
     handleEvent(eventName: string): void;
+    reloadEvent(name: string): Promise<void>;
 }

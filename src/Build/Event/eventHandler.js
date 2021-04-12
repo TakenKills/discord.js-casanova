@@ -9,6 +9,7 @@ const path_1 = require("path");
 const client_1 = require("../Client/client");
 const discord_js_1 = require("discord.js");
 const commandHandler_1 = require("../Command/commandHandler");
+const constants_1 = require("../constants");
 const { fileSync } = new readdir_recursive_1.default();
 class eventHandler {
     constructor(client, eventHandlerOptions) {
@@ -31,9 +32,12 @@ class eventHandler {
         var _a;
         const File = require(path);
         const event = new File(this.client);
+        if (this.events.has(event === null || event === void 0 ? void 0 : event.name))
+            client_1.throwErr(`The event "${event === null || event === void 0 ? void 0 : event.name}" has already been loaded.`);
         if (!event.execute || typeof event.execute !== "function")
             client_1.throwErr(`EventHandler: There was no execute function on the event "${event.name}".`);
         event.client = this.client;
+        event.path = path;
         (_a = this.events) === null || _a === void 0 ? void 0 : _a.set(event.name, event);
     }
     handleEvent(eventName) {
@@ -42,10 +46,9 @@ class eventHandler {
             client_1.throwErr(`EventHandler: Tried to load an event but there was no eventName provided.`);
         if (!(event === null || event === void 0 ? void 0 : event.execute) || typeof event.execute !== "function")
             client_1.throwErr(`There was no "execute" function on the event ${eventName}`);
-        let emitter;
-        emitter = event === null || event === void 0 ? void 0 : event.emittedFrom;
-        if (!["client", "commandhandler"].includes(emitter === null || emitter === void 0 ? void 0 : emitter.toLowerCase()))
-            client_1.throwErr(`EventHandler: On the event "${event === null || event === void 0 ? void 0 : event.name}" the "emittedFrom" option is not set to "client" nor "commandhandler".`);
+        let emitter = "client";
+        if (constants_1.validCommandHandlerEvents.includes(event === null || event === void 0 ? void 0 : event.name))
+            emitter = "commandhandler";
         const type = (event === null || event === void 0 ? void 0 : event.once) ? "once" : "on";
         if ((emitter === null || emitter === void 0 ? void 0 : emitter.toLowerCase()) === "commandhandler") {
             const eventHandler = Object.values(this.client).find((value) => value instanceof commandHandler_1.CommandHandler);
@@ -64,6 +67,22 @@ class eventHandler {
         catch (e) {
             console.error(e);
         }
+    }
+    reloadEvent(name) {
+        return new Promise((resolve, reject) => {
+            const event = this.events.get(name);
+            if (!event)
+                client_1.throwErr(`EventHandler - reloadEvent: That is not an event.`);
+            try {
+                delete require.cache[require.resolve(event === null || event === void 0 ? void 0 : event.path)];
+                this.events.delete(name);
+                this.loadEvent(event === null || event === void 0 ? void 0 : event.path);
+                resolve();
+            }
+            catch (e) {
+                reject(e);
+            }
+        });
     }
 }
 exports.eventHandler = eventHandler;

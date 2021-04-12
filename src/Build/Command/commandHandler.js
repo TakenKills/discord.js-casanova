@@ -45,7 +45,9 @@ class CommandHandler extends events_1.EventEmitter {
         if (typeof this.defaultCooldown !== "number")
             client_1.throwErr(`CommandHandler - The defaultCooldown option on the command handler is not a number.`);
         this.ignoreCooldown = ignoreCooldown;
-        if (this.ignoreCooldown && typeof this.ignoreCooldown !== "string" && !Array.isArray(this.ignoreCooldown))
+        if (this.ignoreCooldown &&
+            typeof this.ignoreCooldown !== "string" &&
+            !Array.isArray(this.ignoreCooldown))
             client_1.throwErr(`CommandHandler - `);
         this.commands = new discord_js_1.Collection();
         this.cooldowns = new discord_js_1.Collection();
@@ -75,7 +77,7 @@ class CommandHandler extends events_1.EventEmitter {
             this.loadCommand(command === null || command === void 0 ? void 0 : command.filePath);
         }
         catch (e) {
-            throw e;
+            console.error(e);
         }
     }
     handle(message) {
