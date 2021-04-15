@@ -1,8 +1,10 @@
+// @ts-ignore
 import { EventEmitter } from "events";
 import { commandHandlerOptions } from "../interface/commandHandler";
 import { Command } from "../interface/command";
 // @ts-ignore
 import rread from "readdir-recursive";
+// @ts-ignore
 import { resolve } from "path";
 import { CasanovaClient, throwErr } from "../Client/client";
 import { Collection, Message, Snowflake } from "discord.js";
@@ -174,6 +176,7 @@ export class CommandHandler extends EventEmitter {
 
       if (now < expirationTime) {
         const timeLeft = expirationTime - now;
+        // @ts-ignore
         return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
       }
     }

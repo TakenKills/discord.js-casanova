@@ -3,7 +3,7 @@
     "target": "es6",
     "module": "commonjs",
     "lib": [
-      "ES2017"
+      "ES2017", "DOM"
     ],
     "declaration": true,
     "declarationMap": true,
