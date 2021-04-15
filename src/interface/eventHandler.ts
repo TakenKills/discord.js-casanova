@@ -1,5 +1,5 @@
 import { Collection } from "discord.js";
-import { CasanovaClient } from "../..";
+import { CasanovaClient } from "../Client/client";
 import { Event } from "./event";
 
 export interface eventHandlerOptions {
