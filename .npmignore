@@ -1,5 +1,8 @@
-# Typescript
-*TypeScript
+# Deps
+node_modules
+
+# ts
+src
 
 # Private.
 *devLog.txt
