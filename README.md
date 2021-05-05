@@ -24,3 +24,5 @@
 - Client and Member permissions!
 - Guild, and owner only commands!
 - Nsfw commands!
+
+### Event Features.
