@@ -198,4 +198,62 @@ class Client extends CasanovaClient {
 }
 ```
 
-### Creating your first command!
+#### Creating your first command!
+
+Notice: This should be in each file in the commands directory.
+
+```js
+// Now for your first command!
+
+// first we've gotta import the command base!
+
+const { CommandBase } = require("discord.js-casanova");
+
+module.exports = class PingCommand extends CommandBase {
+  constructor() {
+    super({
+      name: "ping", // the name of the command.
+      aliases: ["p"], // The aliases for the command <optional>.
+      category: "Utils", // Category. <optional>
+      clientPermissions: ["client permissions"], // <optional>
+      cooldown: 4, // 0 for no cooldown <>.
+      description: "description", // <optional>
+      guildOnly: true, // <optional> default=true
+      memberPermissions: ["member permissions"], // <optional>
+      nsfw: false, // <optional> default=false
+      ownerOnly: false, // <optional> default=false
+      usage: "usage", // <optional>
+    });
+  }
+
+  // Now every command Has to have an execute function.
+  execute(message, args) {
+    console.log(args);
+    console.log(message.content);
+    console.log(this.client.user.tag); // `this.client` being your client.
+  }
+};
+```
+
+#### Creating your first event!
+
+Notice: This should be in each file in the events directory.
+
+```js
+// Now we gotta import the event base!
+const { EventBase } = require("discord.js-casanova");
+
+module.exports = class SomeEvent extends EventBase {
+  constructor() {
+    super({
+      name: "Name of the event.",
+      once: false, // <optional> weather the event should be emitted once or not.
+    });
+  }
+
+  // Every event has to have an execute function.
+  execute(...parms) {
+    console.log(this.client.user.tag);
+  }
+};
+```
