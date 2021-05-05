@@ -257,3 +257,9 @@ module.exports = class SomeEvent extends EventBase {
   }
 };
 ```
+
+## Problems / issues
+If you ever run into any issue with this package please join our [support server](https://discord.gg/b2ScJAYRGp) and feel free to ping me!
+
+## Pull requests.
+Pull requests are welcome by anybody.
