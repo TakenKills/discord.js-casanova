@@ -9,6 +9,8 @@
   </p>
 </div>
 
+**NOTE: If you're using typescript with this package and having problems please join the [support server](https://discord.gg/b2ScJAYRGp)**
+
 ## Features
 
 #### Completely modular commands, and events.
@@ -41,8 +43,157 @@
   - commandBlocked - emitted when a command is blocked due to `nsfw | ownerOnly | guildOnly`.
 
 ### Command Handler Event paramaters
-  **`Note: command is the used command.\n message: is the message object.`**
+  **`Note: command is the used command.
+           message: is the Message object.`**
   - cooldown(message, command, timeLeft) *note: timeLeft is in milliseconds.*
   - commandUsed(message, command).
   - missingPermissions(message, command, missing, type) *note: `missing` are the missing permissions and `type` is either client or member.*
   - commandBlocked(message, command, reason) *note: reason being "nsfw OR guildOnly OR ownerOnly"*
+
+
+ ## Getting Started!
+
+  #### The Client
+  ```js
+    // First we import the Client from discord.js-casanova.
+    
+    const { CasanovaClient } = require("discord.js-casanova");
+    
+    // Then we create our client!
+    
+    class Client extends CasanovaClient {
+      // constructor
+      constructor() {
+          // super call
+            super({
+                // here are the Casanova Client options.
+                token: "Your bot token here.",
+                handlers: ["command", "event"], // this option just enables the command and event handlers if you want to use only the command handler you can just put command in the array.
+                owners: [""] // The owner IDS NOTE: Required if you want to use the ownerOnly command option.
+            }, {
+                 // Here goes your regular discord.js client options
+              })
+        }
+         // This is a function to log the bot in.
+        async start() {
+          try {
+              await this.build();
+              return console.log(`${this.user.tag} is online!`);
+            } catch (e) {
+                 console.error(e);
+            }
+        }
+    }
+    
+    // Now that we've created our client let's log the bot in!
+    
+    const client = new Client();
+    
+    client.start();
+    
+    // Now you're bot is online!
+  ```
+  
+  #### Setting up the command handler.
+  
+  Well now that we've created our client let's set up the command handler.
+  
+  ```js
+  // First let's import The command handler from discord.js-casanova!
+
+const { CasanovaClient, CommandHandler } = require("discord.js-casanova");
+
+class Client extends CasanovaClient {
+  constructor() {
+    super(
+      {
+        token: "Your bot token here.",
+        handlers: ["command", "event"],
+        owners: [""],
+      },
+      {}
+    );
+
+    // Then inside the clients constructor create a property and name it whatever you want in this example I'm naming it "commandHandler".
+    this.commandHandler = new CommandHandler(this, {
+      commandDirectory:
+        "The command folder directory the base being the main directory.",
+      prefix: (message) => {
+        return "+"; // Notice this function MUST return a string!
+      }, // here is your prefix note this can be a string, array, or a function
+      baseClientPermissions: ["Base client permissions."],
+      baseMemberPermissions: ["Base member permissions."],
+      blockBots: true, // weather or not to block bots.
+      blockClient: true, // Weather or not to block the client.
+      defaultCooldown: 3, // The default cooldown for commands.
+      ignoreCooldown: [""], // Array of people who can ignore the cooldown.
+      setCommandClient: true, // default to true || This is mostly for typescript users if you set this to false you won't be able to access the client via `this.client`!
+      strict: true, // default to false. Weather to be strict about the command's execution.
+    });
+  }
+
+  async start() {
+    try {
+      await this.build();
+      return console.log(`${this.user.tag} is online!`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+```
+
+#### Setting up the event handler!
+
+```js
+// Now for the event handler we have to import it first!
+const {
+  CasanovaClient,
+  CommandHandler,
+  EventHandler,
+} = require("discord.js-casanova");
+
+class Client extends CasanovaClient {
+  constructor() {
+    super(
+      {
+        token: "Your bot token here.",
+        handlers: ["command", "event"],
+        owners: [""],
+      },
+      {}
+    );
+
+    this.commandHandler = new CommandHandler(this, {
+      commandDirectory:
+        "The command folder directory the base being the main directory.",
+      prefix: (message) => {
+        return "+";
+      },
+      baseClientPermissions: ["Base client permissions."],
+      baseMemberPermissions: ["Base member permissions."],
+      blockBots: true,
+      blockClient: true,
+      defaultCooldown: 3,
+      ignoreCooldown: [""],
+      setCommandClient: true,
+      strict: true,
+    });
+
+    // Then we make a property again call it whatever you want but i'm calling it eventHandler for this example.
+    this.eventHandler = new EventHandler(this, {
+      eventDirectory:
+        "The event folder directory the base being the main directory.",
+    });
+  }
+
+  async start() {
+    try {
+      await this.build();
+      return console.log(`${this.user.tag} is online!`);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+```
