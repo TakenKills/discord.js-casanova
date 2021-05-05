@@ -62,6 +62,8 @@ export class CommandHandler extends EventEmitter {
       baseClientPermissions,
       baseMemberPermissions,
       setCommandClient,
+      blockBots,
+      blockClient,
     } = CommandHandlerOptions;
 
     this.commandDirectory = commandDirectory;
@@ -74,7 +76,6 @@ export class CommandHandler extends EventEmitter {
 
     this.prefix = prefix;
     if (
-      this.prefix &&
       !["string", "function"].includes(typeof this.prefix) &&
       !Array.isArray(typeof this.prefix)
     )
@@ -82,6 +83,24 @@ export class CommandHandler extends EventEmitter {
         `CommandHandler - The prefix provided to the commandHandler is not a typeof string, function or array.`,
         "type"
       );
+
+    this.blockBots = blockBots;
+
+    if (this.blockBots && typeof this.blockBots !== "boolean")
+      throwErr(
+        'CommandHandler - The "blockBots" option on the command handler is not a boolean.'
+      );
+
+    if (!this.blockBots) this.blockBots = true;
+
+    this.blockClient = blockClient;
+
+    if (this.blockClient && typeof this.blockClient !== "boolean")
+      throwErr(
+        'CommandHandler - The "blockClient" option on the command handler is not a boolean.'
+      );
+
+    if (!this.blockClient) this.blockClient = true;
 
     this.baseClientPermissions = baseClientPermissions;
 
@@ -109,6 +128,8 @@ export class CommandHandler extends EventEmitter {
       throwErr(
         `CommandHandler - The "strict" option on the command handler is not a typeof boolean`
       );
+
+    if (!this.strict) this.strict = false;
 
     this.defaultCooldown = defaultCooldown;
 
@@ -238,10 +259,9 @@ export class CommandHandler extends EventEmitter {
         this.commands.get(this.aliases?.get(commandName?.toLowerCase()));
 
     if (!command || !(command instanceof CommandBase)) return;
-    //@ts-ignore
-    console.log(message.channel.nsfw);
 
-    if (command.nsfw && message.guild)
+    //@ts-ignore
+    if (command.nsfw && message.channel.nsfw)
       return this.emit(EVENTS.COMMAND_BLOCKED, message, command, "nsfw");
 
     if (command.guildOnly && !message.guild)
