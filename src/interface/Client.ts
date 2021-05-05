@@ -1,6 +1,9 @@
+import { Snowflake } from "discord.js";
+
 export interface CasanovaOptions {
   token: string;
   handlers: Array<"command" | "event">;
+  owners: Snowflake[];
 }
 
 export class CasanovaError extends Error {

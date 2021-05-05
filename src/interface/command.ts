@@ -7,7 +7,12 @@ export interface commandOptions {
   description?: string;
   category?: string;
   cooldown?: number;
-  aliases: string[];
+  aliases?: string[];
+  clientPermissions?: string[];
+  memberPermissions?: string[];
+  ownerOnly?: boolean;
+  guildOnly?: boolean;
+  nsfw?: boolean;
 }
 
 export interface Command {
@@ -18,6 +23,8 @@ export interface Command {
   description?: string;
   category?: string;
   cooldown?: number;
-  aliases: string[];
+  aliases?: string[];
+  clientPermissions?: string[];
+  memberPermissions?: string[];
   execute(message: Message, args: string[]): any;
 }

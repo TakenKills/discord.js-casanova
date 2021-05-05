@@ -49,7 +49,15 @@ export const events = [
   "warn",
   "webhookUpdate",
   // command handler.
-  "cooldown", // (message: Discord.Message, command: Casanova.Command, timeleft: number)
+  "cooldown",
+  "missingPermissions",
+  "commandUsed",
+  "commandBlocked",
 ];
 
-export const validCommandHandlerEvents = ["cooldown"];
+export const validCommandHandlerEvents = [
+  "cooldown",
+  "missingPermissions",
+  "commandUsed",
+  "commandBlocked",
+];

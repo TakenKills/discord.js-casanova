@@ -1,27 +1,32 @@
-import { ClientOptions, Client } from "discord.js";
+import { ClientOptions, Client, Snowflake } from "discord.js";
 import { CasanovaOptions, CasanovaError } from "../interface/Client";
 
 export class CasanovaClient extends Client {
   token: string;
   handlers: Array<"command" | "event">;
+  owners: Snowflake[];
 
   constructor(
-    CasanovaOptions: CasanovaOptions,
+    { token, handlers, owners }: CasanovaOptions,
     DiscordJSOptions: ClientOptions
   ) {
-    const { token, handlers } = CasanovaOptions;
     super(DiscordJSOptions);
 
     this.token = token;
 
     if (!this.token || typeof this.token !== "string")
       throwErr(
-        "CasanovaClient: There was either no token provided or the token provided was not a typeof string.",
+        "Client: There was either no token provided or the token provided was not a typeof string.",
         "range"
       );
 
     this.handlers = handlers;
-    if (!Array.isArray(this.handlers)) throwErr(`The "handlers" option on the client is not an array.`);
+    if (this.handlers && !Array.isArray(this.handlers))
+      throwErr(`Client: The "handlers" option on the client is not an array.`);
+
+    this.owners = owners;
+    if (this.owners && !Array.isArray(this.owners))
+      throwErr(`Client: the "owners" option on the client is not an array.`);
   }
 
   build(): Promise<void> {

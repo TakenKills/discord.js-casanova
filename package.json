@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "discord.js-casanova is a discord.js framework that sets up your bot as quickly as possible! all you have to do is write the commands and events! *There is a way to disable the command handler and event handler.*",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

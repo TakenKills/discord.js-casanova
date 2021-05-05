@@ -17,11 +17,21 @@ export class CommandHandler extends EventEmitter {
   commandDirectory: string;
   prefix: string | string[] | Function;
   client: CasanovaClient;
-  commands: Collection<string, Command>;
-  cooldowns: Collection<string, Collection<Snowflake, number>>;
-  defaultCooldown?: number;
+
+  readonly commands: Collection<string, Command>;
+  readonly cooldowns: Collection<string, Collection<Snowflake, number>>;
+  readonly aliases: Collection<string, string>;
+
   ignoreCooldown?: Array<Snowflake> | Snowflake;
-  aliases: Collection<string, string>;
+  defaultCooldown?: number;
+  strict?: boolean;
+  baseClientPermissions?: string[];
+  baseMemberPermissions?: string[];
+  blockClient?: boolean;
+  blockBots?: boolean;
+  setCommandClient?: boolean;
+
+  usedCategories: string[];
 
   constructor(
     client: CasanovaClient,
@@ -34,7 +44,7 @@ export class CommandHandler extends EventEmitter {
     if (!client || !(client instanceof CasanovaClient))
       throwErr(
         `CommandHandler - The client passed into the commandHandler is not an instanceof CasanovaClient.`,
-        "syntax"
+        "type"
       );
 
     if (!this.client.handlers.includes("command"))
@@ -48,6 +58,10 @@ export class CommandHandler extends EventEmitter {
       prefix,
       defaultCooldown,
       ignoreCooldown,
+      strict,
+      baseClientPermissions,
+      baseMemberPermissions,
+      setCommandClient,
     } = CommandHandlerOptions;
 
     this.commandDirectory = commandDirectory;
@@ -60,7 +74,7 @@ export class CommandHandler extends EventEmitter {
 
     this.prefix = prefix;
     if (
-      !this.prefix &&
+      this.prefix &&
       !["string", "function"].includes(typeof this.prefix) &&
       !Array.isArray(typeof this.prefix)
     )
@@ -69,11 +83,37 @@ export class CommandHandler extends EventEmitter {
         "type"
       );
 
+    this.baseClientPermissions = baseClientPermissions;
+
+    if (
+      this.baseClientPermissions &&
+      !Array.isArray(this.baseClientPermissions)
+    )
+      throwErr(
+        'CommandHandler - The "baseClientPermissions" option on the command handler is not an array.'
+      );
+
+    this.baseMemberPermissions = baseMemberPermissions;
+
+    if (
+      this.baseMemberPermissions &&
+      !Array.isArray(this.baseMemberPermissions)
+    )
+      throwErr(
+        'CommandHandler - The "baseMemberPermissions" option on the command handler is not an array.'
+      );
+
+    this.strict = strict;
+
+    if (this.strict && typeof this.strict !== "boolean")
+      throwErr(
+        `CommandHandler - The "strict" option on the command handler is not a typeof boolean`
+      );
+
     this.defaultCooldown = defaultCooldown;
 
     if (!this.defaultCooldown) this.defaultCooldown = 3;
-
-    if (typeof this.defaultCooldown !== "number")
+    else if (typeof this.defaultCooldown !== "number")
       throwErr(
         `CommandHandler - The defaultCooldown option on the command handler is not a number.`,
         "type"
@@ -91,15 +131,25 @@ export class CommandHandler extends EventEmitter {
         "type"
       );
 
+    this.setCommandClient = setCommandClient;
+
+    if (this.setCommandClient && typeof this.setCommandClient !== "boolean")
+      throwErr(
+        'CommandHandler: The "setCommandClient" option is not a boolean. default is true.'
+      );
+
+    if (!this.setCommandClient) this.setCommandClient = true;
+
     this.commands = new Collection();
 
     this.cooldowns = new Collection();
 
     this.aliases = new Collection();
 
-    const paths = fileSync(resolve(this.commandDirectory));
+    this.usedCategories = new Array();
 
-    for (const path of paths) this.loadCommand(path);
+    for (const path of fileSync(resolve(this.commandDirectory)))
+      this.loadCommand(path);
 
     this.client.on("message", (message: Message) => this.handle(message));
   }
@@ -119,10 +169,16 @@ export class CommandHandler extends EventEmitter {
       );
 
     command.filePath = path;
-    command.client = this.client;
+    if (this.setCommandClient) command.client = this.client;
 
     this.commands.set(command.name, command);
-    for (const alias of command.aliases) this.aliases.set(alias, command.name);
+
+    if (command.aliases)
+      for (const alias of command.aliases)
+        this.aliases.set(alias, command.name);
+
+    if (command.category && !this.usedCategories.includes(command.category))
+      this.usedCategories.push(command.category);
   }
 
   reloadCommand(name: string): void {
@@ -130,7 +186,7 @@ export class CommandHandler extends EventEmitter {
 
     if (!command)
       throwErr(
-        `CommandHandler - reloadCommand - There was no command by that name`
+        `CommandHandler - reloadCommand - There was no command by that name or that command has not been loaded yet.`
       );
 
     try {
@@ -138,7 +194,8 @@ export class CommandHandler extends EventEmitter {
       delete require.cache[require.resolve(command?.filePath)];
 
       this.commands.delete(name);
-      // @ts-ignore
+
+      //@ts-ignore
       this.loadCommand(command?.filePath);
     } catch (e) {
       console.error(e);
@@ -146,21 +203,106 @@ export class CommandHandler extends EventEmitter {
   }
 
   async handle(message: Message): Promise<void | boolean> {
+    if (this.blockClient && message.author.id === this.client.user?.id) return;
+    if (this.blockBots && message.author.bot) return;
+
     let prefix: string | string[] | Function = this.prefix;
 
     // @ts-ignore
     if (prefix instanceof Function) prefix = await this.prefix(message);
 
+    if (Array.isArray(prefix)) {
+      //@ts-ignore
+      prefix = prefix.find((pre: string) => message.content.startsWith(pre));
+    }
+
+    if (!prefix) return;
+
     // @ts-ignore
     if (!message.content.startsWith(prefix)) return;
 
-    const command =
-      // @ts-ignore
-      this.commands.get(commandName.toLowerCase()) ||
-      // @ts-ignore
-      this.commands.get(this.aliases.get(commandName?.toLowerCase()));
+    const [commandName, ...args] = message.content
+      .slice(prefix.length)
+      .trim()
+      .split(/ +/g);
+
+    let command =
+      this.commands.get(commandName) ||
+      //@ts-ignore
+      this.commands.get(this.aliases?.get(commandName));
+
+    if (this.strict)
+      command =
+        this.commands.get(commandName.toLowerCase()) ||
+        // @ts-ignore
+        this.commands.get(this.aliases?.get(commandName?.toLowerCase()));
 
     if (!command || !(command instanceof CommandBase)) return;
+    //@ts-ignore
+    console.log(message.channel.nsfw);
+
+    if (command.nsfw && message.guild)
+      return this.emit(EVENTS.COMMAND_BLOCKED, message, command, "nsfw");
+
+    if (command.guildOnly && !message.guild)
+      return this.emit(EVENTS.COMMAND_BLOCKED, message, command, "guildOnly");
+
+    if (this.client.owners) {
+      if (command.ownerOnly && !this.client.owners.includes(message.author.id))
+        return this.emit(EVENTS.COMMAND_BLOCKED, message, command, "ownerOnly");
+    } else
+      console.error(
+        "CasanovaError: You are unable to use the \"ownerOnly\" property on a command. Because you haven't set the owner id's inside the client"
+      );
+
+    if (command.clientPermissions) {
+      //! Permissions
+
+      const perms = new Array();
+
+      perms.push(command.clientPermissions);
+      if (this.baseClientPermissions) perms.concat(this.baseClientPermissions);
+
+      let missing = new Array();
+
+      for (const perm of perms)
+        if (!message.guild?.me?.permissionsIn(message.channel).has(perm))
+          missing.push(perm);
+
+      if (missing[0])
+        return this.emit(
+          EVENTS.MISSING_PERMISSIONS,
+          message,
+          command,
+          missing,
+          "client"
+        );
+    }
+    if (command.memberPermissions) {
+      const perms = new Array();
+
+      perms.push(command.memberPermissions);
+      if (this.baseMemberPermissions) perms.concat(this.baseMemberPermissions);
+
+      let missing = new Array();
+
+      for (const perm of perms)
+        if (!message.member?.permissionsIn(message.channel).has(perm))
+          missing.push(perm);
+
+      if (missing[0])
+        return this.emit(
+          EVENTS.MISSING_PERMISSIONS,
+          message,
+          command,
+          missing,
+          "member"
+        );
+    }
+
+    //! Permissions
+
+    //! Cooldown
 
     if (!this.cooldowns.has(command.name))
       this.cooldowns.set(command.name, new Collection());
@@ -174,24 +316,26 @@ export class CommandHandler extends EventEmitter {
       // @ts-ignore
       const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
 
-      if (now < expirationTime) {
+      if (now < expirationTime && this.checkCooldown(message)) {
         const timeLeft = expirationTime - now;
-        // @ts-ignore
         return this.emit(EVENTS.COOLDOWN, message, command, timeLeft);
       }
     }
     timestamps?.set(message.author.id, now);
     setTimeout(() => timestamps?.delete(message.author.id), cooldownAmount);
 
-    const [commandName, ...args] = message.content
-      .slice(prefix.length)
-      .trim()
-      .split(/ +/g);
+    //! Cooldown
 
     try {
-      return command?.execute(message, args);
+      await command?.execute(message, args);
+      return this.emit(EVENTS.COMMAND_USED, message, command);
     } catch (e) {
       console.error(e);
     }
+  }
+
+  private checkCooldown(message: Message): boolean {
+    if (this.ignoreCooldown?.includes(message.author.id)) return false;
+    return true;
   }
 }
