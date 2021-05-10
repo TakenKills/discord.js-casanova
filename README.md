@@ -128,7 +128,7 @@ class Client extends CasanovaClient {
       defaultCooldown: 3, // The default cooldown for commands.
       ignoreCooldown: [""], // Array of people who can ignore the cooldown.
       setCommandClient: true, // default to true || This is mostly for typescript users if you set this to false you won't be able to access the client via `this.client`!
-      strict: true, // default to false. Wether to be strict about the command's execution.
+      strict: true, // default to false. Whether to be strict about the command's execution.
     });
   }
 
@@ -247,7 +247,7 @@ module.exports = class SomeEvent extends EventBase {
   constructor() {
     super({
       name: "Name of the event.",
-      once: false, // <optional> Wether the event should be emitted once or not.
+      once: false, // <optional> Whether the event should be emitted once or not.
     });
   }
 
@@ -261,5 +261,7 @@ module.exports = class SomeEvent extends EventBase {
 ## Problems / issues
 If you ever run into any issue with this package please join our [support server](https://discord.gg/b2ScJAYRGp) and feel free to ping me!
 
-## Pull requests.
+## Contributing.
 Pull requests are welcome by anybody.
+
+bugs and reports can go in the [issues](https://github.com/TakenKills/discord.js-casanova/issues) section or in the support server.
