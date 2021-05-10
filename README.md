@@ -32,7 +32,7 @@
  - prefix - can be a string, an array, or a function!
  - defaultCooldown - The default cooldown for commands! `optional`.
  - ignoreCooldown - Let specific users bypass the cooldown on commands! `optional`.
- - strict - Weather or not to be strict on command execution `optional` | `default=false`.
+ - strict - Whether or not to be strict on command execution `optional` | `default=false`.
  - Base Client, and Member permissions. -  Check base permissions for each client and member. `optional`.
 
 #### Command Handler Events.
@@ -123,12 +123,12 @@ class Client extends CasanovaClient {
       }, // here is your prefix note this can be a string, array, or a function
       baseClientPermissions: ["Base client permissions."],
       baseMemberPermissions: ["Base member permissions."],
-      blockBots: true, // weather or not to block bots.
-      blockClient: true, // Weather or not to block the client.
+      blockBots: true, // Whether or not to block bots.
+      blockClient: true, // Whether or not to block the client.
       defaultCooldown: 3, // The default cooldown for commands.
       ignoreCooldown: [""], // Array of people who can ignore the cooldown.
       setCommandClient: true, // default to true || This is mostly for typescript users if you set this to false you won't be able to access the client via `this.client`!
-      strict: true, // default to false. Weather to be strict about the command's execution.
+      strict: true, // default to false. Wether to be strict about the command's execution.
     });
   }
 
@@ -247,7 +247,7 @@ module.exports = class SomeEvent extends EventBase {
   constructor() {
     super({
       name: "Name of the event.",
-      once: false, // <optional> weather the event should be emitted once or not.
+      once: false, // <optional> Wether the event should be emitted once or not.
     });
   }
 
