@@ -10,5 +10,6 @@ export interface Event {
   once?: boolean;
   client: CasanovaClient;
   path: string;
+  opts?: object;
   execute(...args: any): any;
 }

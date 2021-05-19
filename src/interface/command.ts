@@ -13,7 +13,7 @@ export interface commandOptions {
   ownerOnly?: boolean;
   guildOnly?: boolean;
   nsfw?: boolean;
-  disabled: boolean;
+  disabled?: boolean;
 }
 
 export interface Command {
@@ -31,5 +31,6 @@ export interface Command {
   ownerOnly?: boolean;
   guildOnly?: boolean;
   nsfw?: boolean;
-  disabled: boolean;
+  disabled?: boolean;
+  opts?: object;
 }
