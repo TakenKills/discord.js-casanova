@@ -18,7 +18,7 @@ export class CommandBase {
   ownerOnly?: boolean;
   guildOnly?: boolean;
   nsfw?: boolean;
-  disabled: boolean;
+  disabled?: boolean;
 
   opts?: object;
 
