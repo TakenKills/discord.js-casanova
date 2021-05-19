@@ -7,18 +7,26 @@ import { Collection } from "discord.js";
 import { Event } from "../interface/event";
 import { CommandHandler } from "../Command/commandHandler";
 import { validCommandHandlerEvents } from "../constants";
+import EventEmitter from "events";
 const { fileSync } = new rread();
+const { Events: { commandHandler: EVENTS} } = require("../interface/commandHandler");
 
-export class eventHandler {
+export class eventHandler extends EventEmitter {
   eventDirectory: string;
   client: CasanovaClient;
   events: Collection<string, Event>;
 
+  opts?: object;
+
   constructor(
     client: CasanovaClient,
-    eventHandlerOptions: eventHandlerOptions
+    eventHandlerOptions: eventHandlerOptions,
+    opts?: object,
   ) {
+    super();
     this.client = client;
+
+    this.opts = opts;
 
     if (!this.client)
       throwErr(
@@ -64,7 +72,7 @@ export class eventHandler {
     this.events?.set(event.name, event);
   }
 
-  handleEvent(eventName: string): void {
+  handleEvent(eventName: string): void|boolean {
     const event = this.events.get(eventName);
     if (!event)
       throwErr(
@@ -103,6 +111,7 @@ export class eventHandler {
       this.client[type](eventName, (...args: any) => event?.execute(...args));
     } catch (e) {
       console.error(e);
+      return this.emit(EVENTS.EVENT_ERROR, event, e)
     }
   }
 

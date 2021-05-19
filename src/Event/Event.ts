@@ -5,13 +5,15 @@ import { events as validEvents } from "../constants";
 export class EventBase {
   name: string;
   once?: boolean;
-  //@ts-ignore
-  client: CasanovaClient;
-  // @ts-ignore
-  path: string;
+  client!: CasanovaClient;
+  path!: string;
 
-  constructor(eventOptions: eventOptions) {
+  opts?: object;
+
+  constructor(eventOptions: eventOptions, opts?: object) {
     const { name, once } = eventOptions;
+
+    this.opts = opts;
 
     this.name = name;
     if (!this.name || typeof this.name !== "string")

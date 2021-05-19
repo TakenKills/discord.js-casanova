@@ -19,5 +19,7 @@ export const Events = {
     COMMAND_USED: "commandUsed", // (message, command)
     MISSING_PERMISSIONS: "missingPermissions", // (message, command, missingPerms, type)
     COMMAND_BLOCKED: "commandBlocked", // (message, command, reason)
+    COMMAND_ERROR: "commandError", // (message, command, error)
+    EVENT_ERROR: "eventError", // (message, event, error)
   },
 };

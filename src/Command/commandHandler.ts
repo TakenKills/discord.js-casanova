@@ -33,13 +33,18 @@ export class CommandHandler extends EventEmitter {
 
   usedCategories: string[];
 
+  opts?: object;
+
   constructor(
     client: CasanovaClient,
-    CommandHandlerOptions: commandHandlerOptions
+    CommandHandlerOptions: commandHandlerOptions,
+    opts?: object,
   ) {
     super();
 
     this.client = client;
+
+    this.opts = opts;
 
     if (!client || !(client instanceof CasanovaClient))
       throwErr(
@@ -229,7 +234,7 @@ export class CommandHandler extends EventEmitter {
 
     let prefix: string | string[] | Function = this.prefix;
 
-    // @ts-ignore
+    //@ts-ignore
     if (prefix instanceof Function) prefix = await this.prefix(message);
 
     if (Array.isArray(prefix)) {
@@ -252,7 +257,7 @@ export class CommandHandler extends EventEmitter {
       //@ts-ignore
       this.commands.get(this.aliases?.get(commandName));
 
-    if (this.strict)
+    if (!this.strict)
       command =
         this.commands.get(commandName.toLowerCase()) ||
         // @ts-ignore
@@ -274,6 +279,9 @@ export class CommandHandler extends EventEmitter {
       console.error(
         "CasanovaError: You are unable to use the \"ownerOnly\" property on a command. Because you haven't set the owner id's inside the client"
       );
+
+    if (command.disabled)
+      return this.emit(EVENTS.COMMAND_BLOCKED, message, command, "disabled");
 
     if (command.clientPermissions) {
       //! Permissions
@@ -329,12 +337,15 @@ export class CommandHandler extends EventEmitter {
 
     const now = Date.now();
     const timestamps = this.cooldowns.get(command.name);
-    // @ts-ignore
-    const cooldownAmount = (command.cooldown || this.defaultCooldown) * 1000;
 
-    if (timestamps?.has(message.author.id)) {
-      // @ts-ignore
-      const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+    const cooldownAmount =
+      (command.cooldown ||
+        (this.defaultCooldown === undefined ? 0 : this.defaultCooldown)) * 1000;
+
+    if (timestamps && timestamps.has(message.author.id)) {
+      const expirationTime =
+        //@ts-ignore
+        timestamps?.get(message.author.id) + cooldownAmount;
 
       if (now < expirationTime && this.checkCooldown(message)) {
         const timeLeft = expirationTime - now;
@@ -351,6 +362,7 @@ export class CommandHandler extends EventEmitter {
       return this.emit(EVENTS.COMMAND_USED, message, command);
     } catch (e) {
       console.error(e);
+      return this.emit(EVENTS.COMMAND_ERROR, message, command, e)
     }
   }
 

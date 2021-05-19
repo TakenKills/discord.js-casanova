@@ -18,8 +18,11 @@ export class CommandBase {
   ownerOnly?: boolean;
   guildOnly?: boolean;
   nsfw?: boolean;
+  disabled: boolean;
 
-  constructor(commandOptions: commandOptions) {
+  opts?: object;
+
+  constructor(commandOptions: commandOptions, opts?: object) {
     const {
       name,
       usage,
@@ -32,7 +35,10 @@ export class CommandBase {
       ownerOnly,
       guildOnly,
       nsfw,
+      disabled,
     } = commandOptions;
+
+    this.opts = opts;
 
     this.name = name;
     if (!this.name || typeof this.name !== "string")
@@ -59,10 +65,17 @@ export class CommandBase {
 
     this.category = category;
 
-    if (!Check("string", this.category) && this.category)
+    if (this.category && !Check("string", this.category))
       throwErr(
         `The category on the command "${this.name}" is not a typeof string.`,
         "type"
+      );
+
+    this.disabled = disabled;
+
+    if (this.disabled && !Check("boolean", this.disabled))
+      throwErr(
+        `Command ${this.name}: The "disabled" option on that command is not a boolean.`
       );
 
     this.cooldown = cooldown;
@@ -98,10 +111,8 @@ export class CommandBase {
     this.nsfw = nsfw;
 
     if (this.nsfw && typeof this.nsfw !== "boolean")
-    throwErr(
-      `Command "${this.name}": The "nsfw" option is not a boolean.`
-    );
-  if (!this.nsfw) this.nsfw = false;
+      throwErr(`Command "${this.name}": The "nsfw" option is not a boolean.`);
+    if (!this.nsfw) this.nsfw = false;
 
     this.clientPermissions = clientPermissions;
 

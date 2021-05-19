@@ -1,19 +1,26 @@
 {
   "name": "discord.js-casanova",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "discord.js-casanova is a discord.js framework that sets up your bot as quickly as possible! all you have to do is write the commands and events! *There is a way to disable the command handler and event handler.*",
   "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TakenKills/discord.js-casanova"
+  },
+  "keywords": ["discord.js", "commandHandler", "handler", "framework", "discord-framework", "discord.js-framework"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bugs": {
+    "url": "https://github.com/TakenKills/discord.js-casanova/issues"
+  },
   "author": "TakenKills",
-  "license": "ISC",
+  "license": "BSD-2-Clause License",
   "dependencies": {
     "discord.js": "github:discordjs/discord.js",
     "readdir-recursive": "0.0.4"
   },
   "devDependencies": {
-    "@types/node": "^14.14.41",
-    "nodemon": "^2.0.7"
+    "@types/node": "^14.14.41"
   }
 }

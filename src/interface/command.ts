@@ -13,9 +13,11 @@ export interface commandOptions {
   ownerOnly?: boolean;
   guildOnly?: boolean;
   nsfw?: boolean;
+  disabled: boolean;
 }
 
 export interface Command {
+  execute(message: Message, args: string[]): any;
   client: CasanovaClient;
   name: string;
   filePath: string;
@@ -26,5 +28,8 @@ export interface Command {
   aliases?: string[];
   clientPermissions?: string[];
   memberPermissions?: string[];
-  execute(message: Message, args: string[]): any;
+  ownerOnly?: boolean;
+  guildOnly?: boolean;
+  nsfw?: boolean;
+  disabled: boolean;
 }

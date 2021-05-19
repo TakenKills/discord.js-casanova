@@ -53,6 +53,8 @@ export const events = [
   "missingPermissions",
   "commandUsed",
   "commandBlocked",
+  "commandError",
+  "eventError",
 ];
 
 export const validCommandHandlerEvents = [
@@ -60,4 +62,6 @@ export const validCommandHandlerEvents = [
   "missingPermissions",
   "commandUsed",
   "commandBlocked",
+  "commandError",
+  "eventError",
 ];
