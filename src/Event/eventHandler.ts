@@ -8,7 +8,6 @@ import { Event } from "../interface/event";
 import { CommandHandler } from "../Command/commandHandler";
 import { validCommandHandlerEvents } from "../constants";
 import EventEmitter from "events";
-import {EventHandler} from "../index";
 const { fileSync } = new rread();
 const { Events: { commandHandler: EVENTS} } = require("../interface/commandHandler");
 
@@ -87,6 +86,7 @@ export class eventHandler extends EventEmitter {
     // @ts-ignore
     if (validCommandHandlerEvents.includes(event?.name))
       emitter = "commandhandler";
+    //@ts-ignore
     if (["eventError"].includes(event?.name)) emitter = "eventhandler"
     const type = event?.once ? "once" : "on";
 
@@ -109,12 +109,10 @@ export class eventHandler extends EventEmitter {
         return this.emit(EVENTS.EVENT_ERROR, event, e);
       }
     } else if (emitter === "eventhandler") {
-      const eventHandler = Object.values(this.client).find((value: any) => value instanceof EventHandler);
-
-      if (!eventHandler) throwErr(`EventHandler: Tried to handle the event "${eventName}" But the client provided doesn't have an "eventHander" property.`);
-
+      const EventHandler = this;
       try {
-        return eventHandler[type](event?.name, (...args: any) => event?.execute(...args));
+        //@ts-ignore
+        EventHandler[type](event?.name, (...args: any) => event?.execute(...args));
       } catch (e) {
         console.error(e);
         return this.emit(EVENTS.EVENT_ERROR, event, e);

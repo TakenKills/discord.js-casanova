@@ -78,6 +78,8 @@ export class CommandBase {
         `Command ${this.name}: The "disabled" option on that command is not a boolean.`
       );
 
+    if (!this.disabled) this.disabled = false;
+
     this.cooldown = cooldown;
 
     if (!Check("number", this.cooldown) && this.cooldown)
