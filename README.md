@@ -9,7 +9,7 @@
   </p>
 </div>
 
-**NOTE: If you're using typescript with this package and having problems please join the [support server](https://discord.gg/b2ScJAYRGp)**
+**NOTE: If you're using typescript with this package and having problems or have any questions please join the [support server](https://discord.gg/b2ScJAYRGp)**
 
 ## Features
 
@@ -41,15 +41,19 @@
   - commandUsed - Emitted when a user uses a command.
   - missingPermissions - Emitted when the member or client is missing permissions.
   - commandBlocked - emitted when a command is blocked due to `nsfw | ownerOnly | guildOnly`.
-
-### Command Handler Event paramaters
+  - commandError - emitted when an error occurs within a command.
+  
+### Event Handler Events.
+  - eventError(event, errorMessage) - emitted when an error occurs within an event.
+  
+#### Command Handler Event paramaters
   **`Note: command is the used command.
            message: is the Message object.`**
   - cooldown(message, command, timeLeft) *note: timeLeft is in milliseconds.*
   - commandUsed(message, command).
   - missingPermissions(message, command, missing, type) *note: `missing` are the missing permissions and `type` is either client or member.*
   - commandBlocked(message, command, reason) *note: reason being "nsfw OR guildOnly OR ownerOnly"*
-
+  - commandError(message, command, errorMessage)
 
  ## Getting Started!
 
@@ -129,7 +133,7 @@ class Client extends CasanovaClient {
       ignoreCooldown: [""], // Array of people who can ignore the cooldown.
       setCommandClient: true, // default to true || This is mostly for typescript users if you set this to false you won't be able to access the client via `this.client`!
       strict: true, // default to false. Whether to be strict about the command's execution.
-    });
+    }, {}); // second paramater is "ops" it's an object that allows you to add whatever you want.
   }
 
   async start() {
@@ -178,13 +182,13 @@ class Client extends CasanovaClient {
       ignoreCooldown: [""],
       setCommandClient: true,
       strict: true,
-    });
+    }, {});
 
     // Then we make a property again call it whatever you want but i'm calling it eventHandler for this example.
     this.eventHandler = new EventHandler(this, {
       eventDirectory:
         "The event folder directory the base being the main directory.",
-    });
+    }, {}); // second paramater is "opts" it's an object that allows you to add whatever you want.
   }
 
   async start() {
@@ -223,7 +227,7 @@ module.exports = class PingCommand extends CommandBase {
       nsfw: false, // <optional> default=false
       ownerOnly: false, // <optional> default=false
       usage: "usage", // <optional>
-    });
+    }, {}); // second paramater is "opts" it's an object that allows you to add whatever you want.
   }
 
   // Now every command Has to have an execute function.
