@@ -40,7 +40,7 @@
   - cooldown - Emitted when a user is on cooldown.
   - commandUsed - Emitted when a user uses a command.
   - missingPermissions - Emitted when the member or client is missing permissions.
-  - commandBlocked - emitted when a command is blocked due to `nsfw | ownerOnly | guildOnly`.
+  - commandBlocked - emitted when a command is blocked due to `nsfw | ownerOnly | guildOnly | disabled`.
   - commandError - emitted when an error occurs within a command.
   
 ### Event Handler Events.
@@ -52,7 +52,7 @@
   - cooldown(message, command, timeLeft) *note: timeLeft is in milliseconds.*
   - commandUsed(message, command).
   - missingPermissions(message, command, missing, type) *note: `missing` are the missing permissions and `type` is either client or member.*
-  - commandBlocked(message, command, reason) *note: reason being "nsfw OR guildOnly OR ownerOnly"*
+  - commandBlocked(message, command, reason) *note: reason being "nsfw OR guildOnly OR ownerOnly OR disabled"*
   - commandError(message, command, errorMessage)
 
  ## Getting Started!
